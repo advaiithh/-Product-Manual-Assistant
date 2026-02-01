@@ -1,0 +1,139 @@
+# ManualQ — Detailed Project Documentation
+
+## 1. Project Overview
+ManualQ is a GenAI-powered Retrieval-Augmented Generation (RAG) system that enables users to chat with large product manuals (200–500 pages) and receive precise, page-cited answers in seconds. The system combines context compression, semantic chunking, FAISS vector search, and LLM-based grounded responses to eliminate manual searching.
+
+## 2. Objectives
+- Enable natural-language Q&A over lengthy manuals
+- Reduce token usage using preprocessing and compression
+- Improve retrieval precision with semantic chunks
+- Provide answers with page/section citations
+- Deliver fast responses using FAISS indexing
+
+## 3. End-to-End Pipeline
+PDF → Text Extraction → Cleaning → Compression → Semantic Chunking → Embeddings → FAISS Index → Retriever → LLM → Cited Answer → Streamlit UI
+
+## 4. Module Description
+
+### 4.1 PDF Text Extraction (pdf_cleaner.py)
+- Uses PyMuPDF to extract page-wise text
+- Preserves page numbers as metadata
+- Output: raw text per page
+
+### 4.2 Noise Removal & Context Compression (pdf_cleaner.py)
+Removes:
+- Headers and footers
+- Page numbers
+- Repeated warnings and boilerplate
+- Extra whitespace and symbols
+Result: 40–60% token reduction before embedding
+
+### 4.3 Semantic Chunking (chunking.py)
+- Splits text using headings, sections, and paragraph meaning
+- Avoids fixed-size chunks
+- Each chunk represents a complete idea
+- Stores chunk text with page number
+
+### 4.4 Embedding Generation (embeddings.py)
+- Uses OpenAI or sentence-transformers
+- Converts chunks into dense vectors
+
+### 4.5 Vector Store (vector_store.py)
+- FAISS index creation for fast similarity search
+- Stores embeddings for retrieval
+
+### 4.6 Retriever (retriever.py)
+- Embeds user query
+- Retrieves Top-K similar chunks from FAISS
+- Returns chunks with page metadata
+
+### 4.7 RAG Pipeline (rag_pipeline.py)
+- Constructs prompt using retrieved chunks
+- Sends context and query to LLM
+- Ensures citation-based answers
+
+### 4.8 User Interface (app.py)
+- Streamlit chat interface
+- Upload PDF and ask questions
+- Displays answers with page citations
+
+## 5. Data Flow
+User uploads PDF → Text extraction and cleaning → Compressed semantic chunks → Embeddings stored in FAISS → User query → Retriever finds relevant chunks → LLM generates cited answer
+
+## 6. RAG Prompt Structure
+You are answering from a product manual. Use only the provided context. Cite page numbers in the answer.
+
+Context:
+{retrieved_chunks_with_page_numbers}
+
+Question:
+{user_query}
+
+## 7. Key Techniques
+
+### Context Compression
+- Regex-based removal of repeating patterns
+- Detection of headers/footers
+- Filtering of boilerplate sentences
+
+### Semantic Chunking
+- Split using headings and section boundaries
+- Merge small related paragraphs
+
+### Retrieval
+- Cosine similarity search in FAISS
+- Top-K chunks passed to LLM
+
+## 8. Performance Characteristics
+| Component | Optimization |
+|---|---|
+| Compression | 40–60% token reduction |
+| Chunking | Higher retrieval precision |
+| FAISS | Sub-second search |
+| RAG | Reduced hallucination with citations |
+
+## 9. Project Structure
+ManualQ/
+├── app.py
+├── rag_pipeline.py
+├── pdf_cleaner.py
+├── chunking.py
+├── embeddings.py
+├── vector_store.py
+├── retriever.py
+├── requirements.txt
+└── README.md
+
+## 10. Installation and Execution
+pip install -r requirements.txt
+streamlit run app.py
+
+## 11. Example Workflow
+1. User uploads a 400-page manual
+2. System preprocesses and builds FAISS index
+3. User asks: “What does error E17 mean?”
+4. Retriever finds relevant chunks
+5. LLM answers with explanation and page citation
+
+## 12. Limitations
+- Works best for text-based PDFs (no OCR)
+- Single manual at a time
+- Embedding quality affects retrieval
+- LLM cost for long queries
+
+## 13. Future Enhancements
+- OCR for scanned manuals
+- Multi-manual support
+- Hybrid keyword + semantic search
+- Query caching
+- Fully offline LLM support
+
+## 14. Applications
+- Product manuals
+- SOP documents
+- Policy handbooks
+- Training materials
+- Technical documentation
+
+## 15. Conclusion
+ManualQ demonstrates how GenAI, RAG, compression, and semantic indexing can transform static manuals into intelligent conversational knowledge systems with grounded, citation-based answers.
